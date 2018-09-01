@@ -39,5 +39,5 @@ def run(message=None, number=None, sid=None, token=None):
 	    else:
             raise ImportError("missing package 'twilio' is required for module 'phone'")
     except Exception as e:
-        return "{} error: {}".format(run.func_name, str(e))
+        return "{} error: {}".format(run.__name__, str(e))
 

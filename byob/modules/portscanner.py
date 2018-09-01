@@ -26,7 +26,7 @@ platforms = ['win32','linux2','darwin']
 results = {}
 threads = {}
 targets = []
-ports = json.loads(urllib.urlopen('https://pastebin.com/raw/WxK7eUSd').read())
+ports = json.loads(urllib.request.urlopen('https://pastebin.com/raw/WxK7eUSd').read().decode('utf-8'))
 tasks = Queue.Queue()
 usage = 'portscanner [target]'
 desciription = """
@@ -75,7 +75,7 @@ def _scan(target):
     except (socket.error, socket.timeout):
         pass
     except Exception as e:
-        util.log("{} error: {}".format(_scan.func_name, str(e)))
+        util.log("{} error: {}".format(_scan.__name__, str(e)))
 
 
 def run(target='192.168.1.1', subnet=False, ports=[21,22,23,25,80,110,111,135,139,443,445,993,995,1433,1434,3306,3389,8000,8008,8080,8888]):
@@ -114,5 +114,5 @@ def run(target='192.168.1.1', subnet=False, ports=[21,22,23,25,80,110,111,135,13
             else:
                 return "Target(s) offline"
     except Exception as e:
-        util.log("{} error: {}".format(_scan.func_name, str(e)))
+        util.log("{} error: {}".format(_scan.__name__, str(e)))
 

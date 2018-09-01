@@ -45,4 +45,4 @@ def run(filename):
         else:
             return "Error: argument 'target' must be a valid filename"
     except Exception as e:
-        util.log("{} error: {}".format(self.escalate.func_name, str(e)))
+        util.log("{} error: {}".format(self.escalate.__name__, str(e)))

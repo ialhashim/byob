@@ -16,7 +16,7 @@ def main():
     import subprocess
 
     # debugging
-    logging.basicConfig(level=logging.DEBUG, handler=logging.StreamHandler())
+    logging.basicConfig(level=logging.DEBUG, handlers=[logging.StreamHandler()])
     logger = logging.getLogger(__name__)
 
     # find pip
@@ -28,7 +28,7 @@ def main():
     # install pip if missing
     if not bool('pip_path' in locals() and os.path.exists(pip_path)):
         try:
-            exec urllib.urlopen("https://bootstrap.pypa.io/get-pip.py").read() in globals()
+            exec urllib.request.urlopen("https://bootstrap.pypa.io/get-pip.py").read() in globals()
         except Exception as e:
             logger.debug("Error installing pip: {}".format(str(e)))
 

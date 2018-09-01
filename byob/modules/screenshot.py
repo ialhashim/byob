@@ -29,4 +29,4 @@ def run():
             img = screen.grab(screen.monitors[0])
         return util.png(img)
     except Exception as e:
-        util.log("{} error: {}".format(run.func_name, str(e)))
+        util.log("{} error: {}".format(run.__name__, str(e)))

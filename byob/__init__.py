@@ -136,6 +136,6 @@ __github__      = 'https://github.com/colental/byob'
 
 def main():
     for module in __all__:
-        exec "import {}".format(module)
+        exec ("import {}".format(module))
 
 main()

