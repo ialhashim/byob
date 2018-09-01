@@ -170,7 +170,7 @@ def freeze(filename, icon=None, hidden=None):
     basename = os.path.basename(filename)
     name = os.path.splitext(basename)[0]
     path = os.path.splitdrive(os.path.abspath('.'))[1].replace('\\','/')
-    key = str().join([random.choice([chr(i) for i in range(48,91) + range(97,123)]) for _ in range(16)])
+    key = str().join([random.choice([chr(i) for i in list(range(48,91)) + list(range(97,123))]) for _ in range(16)])
     imports = [i.strip().split()[1].split(';')[0].split(',') for i in open(filename).read().splitlines() if len(i.strip().split()) if i.strip().split()[0] == 'import']
     for _ in imports:
         if isinstance(_, list):
@@ -188,7 +188,7 @@ def freeze(filename, icon=None, hidden=None):
     process = subprocess.Popen('{} -m PyInstaller {}'.format(sys.executable, fspec), 0, None, subprocess.PIPE, subprocess.PIPE, subprocess.PIPE, shell=True)
     while True:
         try:
-            line = process.stderr.readline().rstrip()
+            line = process.stderr.readline().decode().rstrip()
         except: break
         if line: util.display(line, color='reset', style='dim')
         if 'EXE' in line and 'complete' in line: break
