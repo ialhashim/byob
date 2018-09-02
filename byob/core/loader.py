@@ -3,7 +3,7 @@
 'Remote Import (Build Your Own Botnet)'
 
 # standard library
-import imp
+import importlib
 import sys
 import logging
 import urllib
@@ -39,7 +39,7 @@ class RemoteImporter(object):
             return None
         log(level='info', info= "Checking if built-in....")
         try:
-            loader = imp.find_module(fullname, path)
+            loader = importlib.machinery.PathFinder().find_spec(fullname, path)
             if loader:
                 log(level='info', info= "[-] Found locally!")
                 return None

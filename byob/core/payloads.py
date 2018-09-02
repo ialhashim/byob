@@ -1017,7 +1017,10 @@ class Payload():
                             result = "{} error: {}".format(self.run.__name__, str(e))
                             log(level='debug', info=result)
                         task.update({'result': base64.b64encode(result).decode('utf-8')})
-                        self.send_task(task)
+                        try:
+                            self.send_task(task)
+                        except Exception as e:
+                            log(level='debug', info=result)
                     self.flags.prompt.set()
             else:
                 log("Connection timed out")

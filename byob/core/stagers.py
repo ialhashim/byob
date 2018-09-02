@@ -7,7 +7,7 @@ import os
 import sys
 import struct
 import base64
-import urllib
+import urllib.request
 
 # main
 def decrypt(data, key, block_size=8, key_size=16, num_rounds=32, padding=chr(0)):

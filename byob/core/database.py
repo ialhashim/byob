@@ -161,7 +161,7 @@ COMMIT;
         """
         result = False
 
-        for ci in self.execute("select * from tbl_sessions where uid=:uid", {"uid": uid}):
+        for _ in self.execute("select * from tbl_sessions where uid=:uid", {"uid": uid}):
             result = True
 
         return result
