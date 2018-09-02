@@ -366,7 +366,7 @@ def display(output, color=None, style=None, end='\n', event=None, lock=None):
     _style = ''
     if style:
         _style = getattr(colorama.Style, style.upper())
-    exec("print(_color + _style + output){}".format(end))
+    print(_color + _style + output, end=end)
 
 def color():
     """ 
@@ -386,7 +386,7 @@ def imgur(source, api_key=None):
     """
     import base64
     if api_key:
-        post = post('https://api.imgur.com/3/upload', headers={'Authorization': 'Client-ID {}'.format(api_key)}, data={'image': base64.b64encode(normalize(data)), 'type': 'base64'}, as_json=True)
+        post = post('https://api.imgur.com/3/upload', headers={'Authorization': 'Client-ID {}'.format(api_key)}, data={'image': base64.b64encode(normalize(source)), 'type': 'base64'}, as_json=True)
         return post['data']['link'].encode()
     else:
         log("No Imgur API key found")
@@ -408,8 +408,8 @@ def pastebin(source, api_key):
         try:
             info = {'api_option': 'paste', 'api_paste_code': normalize(source), 'api_dev_key': api_key}
             paste = post('https://pastebin.com/api/api_post.php', data=info)
-            parts = urllib.urlparse.urlsplit(paste)       
-            return urllib.urlparse.urlunsplit((parts.scheme, parts.netloc, '/raw' + parts.path, parts.query, parts.fragment)) if paste.startswith('http') else paste
+            parts = urllib.parse.urlsplit(paste)       
+            return urllib.parse.urlunsplit((parts.scheme, parts.netloc, '/raw' + parts.path, parts.query, parts.fragment)) if paste.startswith('http') else paste
         except Exception as e:
             log("Upload to Pastebin failed with error: {}".format(e))
     else:

@@ -1016,7 +1016,7 @@ class Payload():
                         except Exception as e:
                             result = "{} error: {}".format(self.run.__name__, str(e))
                             log(level='debug', info=result)
-                        task.update({'result': base64.encodebytes(result).decode('ascii')})
+                        task.update({'result': base64.b64encode(result).decode('utf-8')})
                         self.send_task(task)
                     self.flags.prompt.set()
             else:
