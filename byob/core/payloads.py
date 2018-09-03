@@ -142,23 +142,28 @@ class Payload():
             log(level='info', info= '[*] Searching %s' % base_url)
             path = urllib.parse.urlsplit(base_url).path
             base = path.strip('/').replace('/','.')
-            lines = urllib.request.urlopen(base_url).read().decode('utf-8').splitlines()
-            names = [line.rpartition('</a>')[0].rpartition('>')[2].strip('/') for line in lines if 'href' in line if '</a>' in line if '__init__.py' not in line]
-            for n in names:
-                name, ext = os.path.splitext(n)
-                if ext in ('.py','.pyc'):
-                    module = '.'.join((base, name)) if base else name
-                    if module not in target:
-                        log(level='info', info= "[+] Adding %s" % module)
-                        target.append(module)
-                elif not len(ext):
-                    t = threading.Thread(target=self._get_resources, kwargs={'target': target, 'base_url': '/'.join((base_url, n))})
-                    t.daemon = True
-                    t.start()
-                else:
-                    resource = '/'.join((path, n))
-                    if resource not in target:
-                        target.append(resource)
+            with urllib.request.urlopen(base_url) as response:
+                info = response.info()
+                if 'text' in info.get_content_type():
+                    lines = response.read().decode('utf-8').splitlines()
+                    names = [line.rpartition('</a>')[0].rpartition('>')[2].strip('/') for line in lines if 'href' in line if '</a>' in line if '__init__.py' not in line]
+                    for n in names:
+                        if '__pycache__' in n: 
+                            continue
+                        name, ext = os.path.splitext(n)
+                        if ext in ('.py','.pyc'):
+                            module = '.'.join((base, name)) if base else name
+                            if module not in target:
+                                log(level='info', info= "[+] Adding %s" % module)
+                                target.append(module)
+                        elif not len(ext):
+                            t = threading.Thread(target=self._get_resources, kwargs={'target': target, 'base_url': '/'.join((base_url, n))})
+                            t.daemon = True
+                            t.start()
+                        elif not 'dist-info' in ext:
+                            resource = '/'.join((path, n))
+                            if resource not in target:
+                                target.append(resource)
         except Exception as e:
             log("{} error: {}".format(self._get_resources.__name__, str(e)))
 

