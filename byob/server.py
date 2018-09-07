@@ -353,13 +353,16 @@ class C2():
         column1 = 'command <arg>'
         column2 = 'description'
         info = info if info else {command['usage']: command['description'] for command in self.commands.values()}
-        max_key = max(map(len, list(info.keys()) + [column1])) + 2
-        max_val = max(map(len, list(info.values()) + [column2])) + 2
-        util.display('\n', end=' ')
-        util.display(column1.center(max_key) + column2.center(max_val), color=self._text_color, style='bright')
-        for key in sorted(info):
-            util.display(key.ljust(max_key).center(max_key + 2) + info[key].ljust(max_val).center(max_val + 2), color=self._text_color, style=self._text_style)
-        util.display("\n", end=' ')
+        if isinstance(info, dict):
+            max_key = max(map(len, list(info.keys()) + [column1])) + 2
+            max_val = max(map(len, list(info.values()) + [column2])) + 2
+            util.display('\n', end=' ')
+            util.display(column1.center(max_key) + column2.center(max_val), color=self._text_color, style='bright')
+            for key in sorted(info):
+                util.display(key.ljust(max_key).center(max_key + 2) + info[key].ljust(max_val).center(max_val + 2), color=self._text_color, style=self._text_style)
+            util.display("\n", end=' ')
+        else:
+            util.display(str(info))
 
     def display(self, info):
         """ 
@@ -508,7 +511,9 @@ class C2():
             if isinstance(task, dict) and task.get('task') == 'prompt' and task.get('result'):
                 session._prompt = task.get('result')
             elif task.get('result'):
-                self.display(task.get('result'))
+                result = base64.decodebytes(task.get('result').encode()).decode()
+                util.display("\n\n["+str(session.id)+"]")
+                util.display(result)
         self._return()
 
     def session_webcam(self, args=''):

